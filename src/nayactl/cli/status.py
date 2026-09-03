@@ -20,6 +20,7 @@ from ..constants import (
   MOD_SEND_HANDSHAKE,
   MOD_GET_ADDRESS,
   module_type_from_address,
+  module_side_from_address,
   SYS_GET_FW_VERSION,
   SYS_GET_HW_ID_NUMBER,
   SYS_GET_KB_BATTERY_LEVEL,
@@ -96,6 +97,7 @@ def _query_half(transport: Transport, dest: int, verbose: bool = False) -> dict:
     module_info["type"] = module_type_from_address(addr)
     if addr is not None:
       module_info["address"] = f"0x{addr:02X}"
+      module_info["docked"] = module_side_from_address(addr)
 
     module_payload = first_payload(transport.send_command(dest, CAT_MODULE, MOD_GET_FW_VERSION))
     if module_payload is not None:
@@ -169,7 +171,9 @@ def _print_half_status(label: str, info: dict) -> None:
   if module_info:
     click.echo(f"  Module:      {module_info.get('type', 'Unknown')}")
     if "address" in module_info:
-      click.echo(f"    Address:   {module_info['address']}")
+      docked = module_info.get("docked")
+      click.echo(f"    Address:   {module_info['address']}"
+                 + (f"  ({docked} half)" if docked else ""))
     if "fw_version" in module_info:
       click.echo(f"    Firmware:  {module_info['fw_version']}")
     if "battery" in module_info:
