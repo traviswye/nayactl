@@ -119,6 +119,25 @@ MODULE_TYPES = {
   5: "Query",
 }
 
+# MODULE_DETECT (0xDE/0x1002) only reports PRESENCE -- it answers 0x01 for any docked module --
+# so keying MODULE_TYPES on its payload labels every module "Touch". The module's type comes from
+# its dock-bus address instead, which SEND_HANDSHAKE (0xDE/0x1001) returns as [01][addr] and
+# GET_ADDRESS (0xDE/0x1007) returns directly.
+#
+# Addresses observed against a real Create (fw 3.41.0). Touch/Float/Query are still unknown --
+# dock one and run `nayactl status -v` to capture its address.
+MODULE_ADDR_TYPES = {
+  0x21: "Track",
+  0x40: "Tune",
+}
+
+
+def module_type_from_address(addr):
+  """Dock-bus address -> module type. Unknown addresses are reported, not guessed."""
+  if addr is None:
+    return "Unknown"
+  return MODULE_ADDR_TYPES.get(addr, f"Unknown (addr 0x{addr:02X})")
+
 # --- BLE commands (0xBE) ---
 
 BLE_SET_PAIR_ADDRESS      = 0x1001
